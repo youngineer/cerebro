@@ -1,0 +1,24 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": " AI Research Agent that accepts a topic from a user, runs a small research workflow, and returns a structured result.",
+  "keywords": [
+    "Kartik",
+    "S"
+  ],
+  "license": "ISC",
+  "author": "Kartik S",
+  "type": "module",
+  "main": "./src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index.ts",
+    "dev": "nodemon --exec \"npx ts-node\" src/index.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
+  }
+}
