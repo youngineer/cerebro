@@ -1,19 +1,37 @@
-import { PrismaClient } from '@prisma/client'; // or from your custom location
-import dotenv from 'dotenv';
+import express from 'express';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import { getEnvVar } from './utils/helperFunctions.ts';
+import authController from './controllers/authController.ts';
+import * as dotenv from 'dotenv';
 
-dotenv.config();
+dotenv.config({ quiet: true});
 
-const prisma = new PrismaClient();
 
-async function testConnection() {
-  try {
-    const users = await prisma.user.findMany(); // Example query, assuming you have a `user` table
-    console.log(users);
-  } catch (error) {
-    console.error('Error connecting to the database:', error);
-  } finally {
-    await prisma.$disconnect(); // Close the Prisma connection
-  }
-}
+const PORT: string = getEnvVar("BACKEND_PORT");
 
-testConnection();
+const app: express.Application = express();
+app.use(
+    cors({
+        credentials: true, 
+        // origin: FRONTEND_URL 
+    })
+);
+
+app.use(express.json());
+app.use(cookieParser());
+
+
+app.use(authController);
+
+
+(async function main(): Promise<void> {
+    try {
+        app.listen(PORT, () => {
+            console.log(`Successfully listening on port: ${PORT}`);
+        });
+    } catch(e) {
+        console.error(`Error while connecting to db: ${e}`);
+        process.exit(1);
+    }
+})();
