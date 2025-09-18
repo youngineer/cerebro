@@ -1,5 +1,8 @@
 /backend/node_modules
 /backend/.gitignore
+/.env
+/backend/.env
+/backend/src/configs
 
 
 /frontend/node_modules

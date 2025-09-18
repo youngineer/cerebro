@@ -16,9 +16,20 @@
     "dev": "nodemon --exec \"npx ts-node\" src/index.ts"
   },
   "devDependencies": {
+    "@types/express": "^5.0.3",
     "@types/node": "^24.5.2",
+    "@typescript-eslint/eslint-plugin": "^8.44.0",
+    "@typescript-eslint/parser": "^8.44.0",
+    "eslint": "^9.35.0",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.16.2",
+    "@prisma/extension-accelerate": "^2.0.2",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "prisma": "^6.16.2"
   }
 }
