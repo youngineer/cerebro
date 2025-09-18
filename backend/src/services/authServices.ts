@@ -50,6 +50,7 @@ export class AuthService implements IAuthService {
             };
 
         } catch (error: any) {
+            console.error("Error caught:", error.message, "\nStack:", error.stack);
             return {
                 success: false,
                 message: error,
@@ -86,6 +87,7 @@ export class AuthService implements IAuthService {
                 }
             }
         } catch (error: any) {
+            console.error("Error caught:", error.message, "\nStack:", error.stack);
             return {
                 success: false,
                 message: error,
