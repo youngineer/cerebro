@@ -11,7 +11,8 @@ const researchController: Router = express.Router();
 researchController.post("/research", auth, async(req: Request, resp: Response): Promise<void>  => {
     try {
         const {query} = req?.body;
-        const op = await researchServices.postResearch(query);
+        const userID = req?.user?.id;
+        const op = await researchServices.postResearch(userID, query);
 
         resp.status(200).json(createResponse("Sucess", op));
     } catch (error: any) {

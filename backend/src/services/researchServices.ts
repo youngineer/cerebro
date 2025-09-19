@@ -10,9 +10,44 @@ const prisma = new PrismaClient();
 
 export class ResearchServices implements IResearchServices {
 
-    async postResearch(payload: string[]): Promise<IServiceResponse> {
+    async postResearch(userId: string, payload: string[]): Promise<IServiceResponse> {
+        if(payload.length < 1 || payload.every(content => content.trim() === "")) {
+            return {
+                success: false,
+                message: "Empty query received",
+                content: null
+            }
+        }
+
+        let topic: string = payload[0]!;
+        for(let i = 1; i < payload.length; ++i) {
+            topic += payload[i];
+        }
+
         try {
+            const researchTopic = await prisma.researchTopic.create({
+                data: {
+                    topic: topic,
+                    userId: userId
+                }
+            });
+
+            let workflowLog = await prisma.workflowLog.create({
+                data: {
+                    researchTopicId: researchTopic.id,
+                    step: "1",
+                    message: `Research initiation commenced for the topic: ${topic}.`
+                }
+            });
+
             const articleObj: Partial<IArticle>[] = await this.getNewsContent(payload);
+            workflowLog = await prisma.workflowLog.create({
+                data: {
+                    researchTopicId: researchTopic.id,
+                    step: "2",
+                    message: `Relevant articles for the query have been successfully retrieved.`
+                }
+            });
             const fullContent: string[] = articleObj.map((article) => article.description || "");
             
             if (fullContent.length === 0 || fullContent.every(content => content.trim() === "")) {
@@ -23,12 +58,68 @@ export class ResearchServices implements IResearchServices {
                 };
             }
 
-            const aiResponse = await this.getAiResponse(payload, fullContent);
+            await prisma.researchTopic.update({
+                where: {
+                    id: researchTopic.id
+                },
+                data: {
+                    status: 'IN_PROGRESS'
+                }
+            })
+
+            workflowLog = await prisma.workflowLog.create({
+                data: {
+                    researchTopicId: researchTopic.id,
+                    step: "3",
+                    message: `Full articles have been successfully fetched for the query.`
+                }
+            });
+
+            const aiResponse: string = await this.getAiResponse(payload, fullContent);
+
+
+            let aiResponseJson;
+            try {
+                aiResponseJson = JSON.parse(aiResponse);
+            } catch (err: any) {
+                console.log("Direct JSON parsing failed, attempting to extract JSON...");
+                const startIdx = aiResponse.indexOf('{');
+                const endIdx = aiResponse.lastIndexOf('}') + 1;
+
+                if (startIdx === -1 || endIdx === 0) {
+                    throw new Error("No valid JSON found in AI response");
+                }
+
+                const rawJson = aiResponse.slice(startIdx, endIdx);
+                console.log("Extracted JSON:", rawJson);
+                
+                try {
+                    aiResponseJson = JSON.parse(rawJson);
+                } catch (parseErr: any) {
+                    throw new Error("Failed to parse AI response JSON: " + parseErr.message);
+                }
+            }
+
+            workflowLog = await prisma.workflowLog.create({
+                data: {
+                    researchTopicId: researchTopic.id,
+                    step: "4",
+                    message: `Successfully completed the generation of summaries and tokenization.`
+                }
+            });
+
+            const researchResult = await prisma.researchResult.create({
+                data: {
+                    researchTopicId: researchTopic.id,
+                    summaries: aiResponseJson?.overallSummary,
+                    keywords: aiResponseJson?.keywords
+                }
+            })
             
             return {
                 success: true,
                 message: "Research completed successfully",
-                content: aiResponse
+                content: researchResult
             }
         } catch (error: any) {
             console.error("Error caught:", error.message, "\nStack:", error.stack);
@@ -173,7 +264,7 @@ export class ResearchServices implements IResearchServices {
         }
     }
 
-    private async getAiResponse(query: string[], content: string[]) {
+    private async getAiResponse(query: string[], content: string[]): Promise<string> {
         try {
             let targetTopic: string = query[0]!;
             for(let i = 1; i < query.length; ++i) {
@@ -183,8 +274,6 @@ export class ResearchServices implements IResearchServices {
             const prompt: string = AI_PROMPT + `Research topic: ${targetTopic}
             content: ${content}`;
             
-            console.log(`Prompt length: ${prompt.length} characters`);
-            
             const apiKey = getEnvVar("OPENROUTER_APIKEY");
             
             // abortController for timeout
@@ -192,15 +281,13 @@ export class ResearchServices implements IResearchServices {
             const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
             const requestBody = {
-                model: 'meta-llama/llama-3.3-8b-instruct:free',
+                model: 'deepseek/deepseek-chat-v3.1:free',
                 messages: [
                     {
                         role: 'user',
                         content: prompt,
                     },
                 ]
-                // max_tokens: 1000,
-                // temperature: 0.7
             };
 
             const aiResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -224,8 +311,15 @@ export class ResearchServices implements IResearchServices {
                 throw new Error(`Error fetching ai response: ${aiResponse.status} ${aiResponse.statusText} - ${errorText}`);
             }
 
-            const data = await aiResponse.json();
-            return data;
+            const data = await aiResponse.json() as any;
+            console.log("Full OpenRouter response:", JSON.stringify(data, null, 2));
+            
+            if (data.choices && data.choices.length > 0 && data.choices[0].message && data.choices[0].message.content) {
+                return data.choices[0].message.content;
+            } else {
+                console.error("Unexpected OpenRouter response format:", data);
+                throw new Error("Invalid response format from OpenRouter API");
+            }
 
         } catch (error: any) {
             if (error.name === 'AbortError') {

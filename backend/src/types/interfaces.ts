@@ -27,7 +27,7 @@ export interface IBackendResponse {
 
 
 export interface IResearchServices {
-    postResearch(payload: string[]): Promise<IServiceResponse>;
+    postResearch(userId: string, payload: string[]): Promise<IServiceResponse>;
     // getResearch(researchId?: string | null): Promise<IServiceResponse>;
 }
 
