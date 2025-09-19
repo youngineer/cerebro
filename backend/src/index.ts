@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import { getEnvVar } from './utils/helperFunctions.ts';
 import authController from './controllers/authController.ts';
 import * as dotenv from 'dotenv';
+import researchController from './controllers/researchController.ts';
 
 dotenv.config({ quiet: true});
 
@@ -23,6 +24,7 @@ app.use(cookieParser());
 
 
 app.use(authController);
+app.use(researchController);
 
 
 (async function main(): Promise<void> {

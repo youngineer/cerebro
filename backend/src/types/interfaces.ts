@@ -24,3 +24,27 @@ export interface IBackendResponse {
     message: string;
     content: any;
 }
+
+
+export interface IResearchServices {
+    postResearch(payload: string[]): Promise<IServiceResponse>;
+    // getResearch(researchId?: string | null): Promise<IServiceResponse>;
+}
+
+
+export interface IArticle {
+  source: object;
+  author: string | null;
+  title: string;
+  description: string;
+  url: string;
+  urlToImage: string | null;
+  publishedAt: string;
+  content: string;
+}
+
+export interface IApiResponse {
+  status: string;
+  totalResults: number;
+  articles: IArticle[];
+}

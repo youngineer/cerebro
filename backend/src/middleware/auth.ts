@@ -1,8 +1,9 @@
 import type{ NextFunction, Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
 import { createResponse } from '../utils/helperFunctions.ts';
-import { PrismaClient } from '@prisma/client/edge';
+
 import type { IUser } from '../types/interfaces.ts';
+import { PrismaClient } from '@prisma/client';
 
 declare global {
     namespace Express {

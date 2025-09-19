@@ -1,7 +1,7 @@
 import type { IBackendResponse, IServiceResponse, IUser } from "../types/interfaces.ts";
 import validator from "validator";
 import { hashSync, compareSync } from "bcrypt";
-import { PrismaClient } from "../generated/prisma/edge.js";
+import { PrismaClient } from '@prisma/client';
 import jwt from "jsonwebtoken";
 import { getEnvVar } from "../utils/helperFunctions.ts";
 import * as dotenv from 'dotenv';

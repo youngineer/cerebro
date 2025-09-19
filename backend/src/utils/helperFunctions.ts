@@ -1,4 +1,5 @@
-import type { IBackendResponse } from "../types/interfaces.ts";
+
+import type { IBackendResponse, IUser } from "../types/interfaces.ts";
 
 export function getEnvVar(key: string): string {
   const value = process.env[key];
@@ -15,3 +16,6 @@ export function createResponse(message: string, content: any): IBackendResponse 
     content: content
   }
 }
+
+
+

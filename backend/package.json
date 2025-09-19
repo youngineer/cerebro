@@ -39,7 +39,10 @@
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
+    "newsapi": "^2.4.1",
+    "postgres": "^3.4.7",
     "prisma": "^6.16.2",
+    "puppeteer": "^24.22.0",
     "validator": "^13.15.15"
   }
 }
