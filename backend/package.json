@@ -13,11 +13,15 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node src/index.ts",
-    "dev": "nodemon --exec \"npx ts-node\" src/index.ts"
+    "dev": "nodemon --exec \"npx ts-node\" src/index.ts",
+    "worker": "npx ts-node src/services/worker.ts",
+    "worker:dev": "nodemon --exec \"npx ts-node\" src/services/worker.ts"
   },
   "devDependencies": {
+    "@types/bull": "^3.15.9",
     "@types/express": "^5.0.3",
     "@types/node": "^24.5.2",
+    "@types/redis": "^4.0.10",
     "@typescript-eslint/eslint-plugin": "^8.44.0",
     "@typescript-eslint/parser": "^8.44.0",
     "eslint": "^9.35.0",
@@ -33,16 +37,21 @@
     "@types/cors": "^2.8.19",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/validator": "^13.15.3",
+    "@upstash/redis": "^1.35.4",
     "bcrypt": "^6.0.0",
+    "bull": "^4.16.5",
+    "bullmq": "^5.58.7",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
+    "ioredis": "^5.7.0",
     "jsonwebtoken": "^9.0.2",
     "newsapi": "^2.4.1",
     "postgres": "^3.4.7",
     "prisma": "^6.16.2",
     "puppeteer": "^24.22.0",
+    "redis": "^5.8.2",
     "validator": "^13.15.15"
   }
 }

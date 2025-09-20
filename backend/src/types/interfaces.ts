@@ -26,9 +26,18 @@ export interface IBackendResponse {
 }
 
 
+export interface IJob {
+    researchTopicId: string;
+    payload: string[];
+    userId: string
+}
+
+
 export interface IResearchServices {
+    executeResearch(researchTopicId: string, payload: string[], userId: string): Promise<any>;
     postResearch(userId: string, payload: string[]): Promise<IServiceResponse>;
-    // getResearch(researchId?: string | null): Promise<IServiceResponse>;
+    getTopics(): Promise<IServiceResponse>;
+    getResearch(researchId?: string | null): Promise<IServiceResponse>;
 }
 
 

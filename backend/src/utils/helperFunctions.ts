@@ -1,5 +1,7 @@
 
 import type { IBackendResponse, IUser } from "../types/interfaces.ts";
+import dotenv from 'dotenv'
+dotenv.config()
 
 export function getEnvVar(key: string): string {
   const value = process.env[key];

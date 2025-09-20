@@ -3,7 +3,7 @@ import type { IApiResponse, IArticle, IResearchServices, IServiceResponse } from
 import { getEnvVar } from "../utils/helperFunctions.ts";
 import { AI_PROMPT, NEWSAPI_URL } from "../utils/constants.ts";
 import puppeteer from 'puppeteer';
-
+import researchProcessingQueue from '../configs/queue.ts';
 
 const prisma = new PrismaClient();
 
@@ -21,6 +21,7 @@ export class ResearchServices implements IResearchServices {
 
         let topic: string = payload[0]!;
         for(let i = 1; i < payload.length; ++i) {
+            topic += " ";
             topic += payload[i];
         }
 
@@ -32,7 +33,7 @@ export class ResearchServices implements IResearchServices {
                 }
             });
 
-            let workflowLog = await prisma.workflowLog.create({
+            await prisma.workflowLog.create({
                 data: {
                     researchTopicId: researchTopic.id,
                     step: "1",
@@ -40,10 +41,38 @@ export class ResearchServices implements IResearchServices {
                 }
             });
 
+            // Queue the background job
+            const job = await researchProcessingQueue.add(topic, {
+                researchTopicId: researchTopic.id,
+                payload,
+                userId
+            });
+
+            return {
+                success: true,
+                message: "Research queued for processing",
+                content: { 
+                    researchTopicId: researchTopic.id, 
+                    jobId: job.id,
+                    status: "PENDING"
+                }
+            }
+        } catch (error: any) {
+            return {
+                success: false,
+                message: error.message || "An error occurred during research",
+                content: null
+            }
+        }
+            
+    }
+
+    async executeResearch(researchTopicId: string, payload: string[], userId: string): Promise<IServiceResponse> {
+        try {
             const articleObj: Partial<IArticle>[] = await this.getNewsContent(payload);
-            workflowLog = await prisma.workflowLog.create({
+            await prisma.workflowLog.create({
                 data: {
-                    researchTopicId: researchTopic.id,
+                    researchTopicId: researchTopicId,
                     step: "2",
                     message: `Relevant articles for the query have been successfully retrieved.`
                 }
@@ -60,16 +89,16 @@ export class ResearchServices implements IResearchServices {
 
             await prisma.researchTopic.update({
                 where: {
-                    id: researchTopic.id
+                    id: researchTopicId
                 },
                 data: {
                     status: 'IN_PROGRESS'
                 }
             })
 
-            workflowLog = await prisma.workflowLog.create({
+            await prisma.workflowLog.create({
                 data: {
-                    researchTopicId: researchTopic.id,
+                    researchTopicId: researchTopicId,
                     step: "3",
                     message: `Full articles have been successfully fetched for the query.`
                 }
@@ -77,12 +106,10 @@ export class ResearchServices implements IResearchServices {
 
             const aiResponse: string = await this.getAiResponse(payload, fullContent);
 
-
             let aiResponseJson;
             try {
                 aiResponseJson = JSON.parse(aiResponse);
             } catch (err: any) {
-                console.log("Direct JSON parsing failed, attempting to extract JSON...");
                 const startIdx = aiResponse.indexOf('{');
                 const endIdx = aiResponse.lastIndexOf('}') + 1;
 
@@ -91,7 +118,6 @@ export class ResearchServices implements IResearchServices {
                 }
 
                 const rawJson = aiResponse.slice(startIdx, endIdx);
-                console.log("Extracted JSON:", rawJson);
                 
                 try {
                     aiResponseJson = JSON.parse(rawJson);
@@ -100,19 +126,32 @@ export class ResearchServices implements IResearchServices {
                 }
             }
 
-            workflowLog = await prisma.workflowLog.create({
+            await prisma.workflowLog.create({
                 data: {
-                    researchTopicId: researchTopic.id,
+                    researchTopicId: researchTopicId,
                     step: "4",
                     message: `Successfully completed the generation of summaries and tokenization.`
                 }
             });
 
+            await prisma.researchTopic.update({
+                where: {
+                    id: researchTopicId
+                },
+                data: {
+                    status: "COMPLETED"
+                }
+            });
+
+            // Ensure we have valid data for the database
+            const summaries = aiResponseJson?.summaries || aiResponseJson?.overallSummary || "No summary available";
+            const keywords = aiResponseJson?.keywords || [];
+
             const researchResult = await prisma.researchResult.create({
                 data: {
-                    researchTopicId: researchTopic.id,
-                    summaries: aiResponseJson?.overallSummary,
-                    keywords: aiResponseJson?.keywords
+                    researchTopicId: researchTopicId,
+                    summaries: summaries,
+                    keywords: keywords
                 }
             })
             
@@ -122,12 +161,95 @@ export class ResearchServices implements IResearchServices {
                 content: researchResult
             }
         } catch (error: any) {
-            console.error("Error caught:", error.message, "\nStack:", error.stack);
             return {
                 success: false,
                 message: error.message || "An error occurred during research",
                 content: null
             }
+        }
+    }
+
+    async getTopics(): Promise<IServiceResponse> {
+        try {
+            const topics = await prisma.researchTopic.findMany({
+                orderBy: {
+                    createdAt: 'desc'
+                },
+                select: {
+                    id: true,
+                    topic: true,
+                    status: true,
+                    createdAt: true
+                }
+            });
+
+            if (!topics || topics.length < 1) {
+                return {
+                    success: false,
+                    message: "No topics added yet",
+                    content: null
+                }
+            }
+
+            return {
+                success: true,
+                message: "Topics fetched successfully!",
+                content: topics
+            }
+        } catch (error: any) {
+            return { 
+                success: false, 
+                message: error.message || "Error fetching topics", 
+                content: null 
+            };
+        }
+    }
+
+    async getResearch(researchId?: string | null): Promise<IServiceResponse> {
+        try {
+            if (!researchId) {
+                return {
+                    success: false,
+                    message: "Research ID is required",
+                    content: null
+                }
+            }
+
+            const research = await prisma.researchTopic.findUnique({
+                where: {
+                    id: researchId
+                },
+                select: {
+                    id: true,
+                    topic: true,
+                    status: true,
+                    createdAt: true,
+                    logs: {
+                        orderBy: { createdAt: 'asc' }
+                    },
+                    result: true
+                }
+            });
+
+            if (!research) {
+                return {
+                    success: false,
+                    message: "Research not found",
+                    content: null
+                }
+            }
+
+            return {
+                success: true,
+                message: "Research fetched successfully!",
+                content: research
+            }
+        } catch (error: any) {
+            return { 
+                success: false, 
+                message: error.message || "Error fetching research", 
+                content: null 
+            };
         }
     }
 
@@ -178,8 +300,7 @@ export class ResearchServices implements IResearchServices {
             }
 
         } catch (error: any) {
-            console.error("Error in getNewsContent:", error);
-            throw new Error(error.message);
+            throw new Error("Failed to fetch news content");
         }
     }
 
@@ -205,7 +326,6 @@ export class ResearchServices implements IResearchServices {
                     timeout: 10000
                 });
             } catch (navigationError: any) {
-                console.warn(`Navigation failed for ${url}:`, navigationError.message);
                 return targetText; // Return original description if navigation fails
             }
 
@@ -251,14 +371,13 @@ export class ResearchServices implements IResearchServices {
 
             return articleText || targetText;
         } catch (error: any) {
-            console.error("Error caught:", error.message, "\nStack:", error.stack);
             return targetText;
         } finally {
             if (browser) {
                 try {
                     await browser.close();
                 } catch (closeError) {
-                    console.warn("Error closing browser:", closeError);
+                    // Silent error handling for browser cleanup
                 }
             }
         }
@@ -306,27 +425,21 @@ export class ResearchServices implements IResearchServices {
 
             if(!aiResponse.ok) {
                 const errorText = await aiResponse.text();
-                console.error(`OpenRouter API Error: ${aiResponse.status} ${aiResponse.statusText}`);
-                console.error(`Error response body:`, errorText);
                 throw new Error(`Error fetching ai response: ${aiResponse.status} ${aiResponse.statusText} - ${errorText}`);
             }
 
             const data = await aiResponse.json() as any;
-            console.log("Full OpenRouter response:", JSON.stringify(data, null, 2));
             
             if (data.choices && data.choices.length > 0 && data.choices[0].message && data.choices[0].message.content) {
                 return data.choices[0].message.content;
             } else {
-                console.error("Unexpected OpenRouter response format:", data);
                 throw new Error("Invalid response format from OpenRouter API");
             }
 
         } catch (error: any) {
             if (error.name === 'AbortError') {
-                console.error("AI API request timed out after 30 seconds");
                 throw new Error("AI API request timed out. Please try again.");
             }
-            console.error("Error in getAiResponse:", error.message, "\nStack:", error.stack);
             throw error;
         }
     }
