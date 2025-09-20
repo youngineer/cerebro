@@ -27,7 +27,7 @@ researchController.get("/research", auth, async(req: Request, resp: Response) =>
     try {
         const serviceResponse: IServiceResponse = await researchServices.getTopics();
 
-        resp.status(200).json(createResponse(serviceResponse?.message, serviceResponse));
+        resp.status(200).json(createResponse(serviceResponse?.message, serviceResponse?.content));
     } catch (error: any) {
         console.error("Error caught:", error.message, "\nStack:", error.stack);
         resp.status(500).json(createResponse(error, null));
@@ -40,7 +40,7 @@ researchController.get("/research/:researchId", auth, async(req: Request, resp: 
     try {
         const serviceResponse: IServiceResponse = await researchServices.getResearch(researchId);
 
-        resp.status(200).json(createResponse(serviceResponse?.message, serviceResponse));
+        resp.status(200).json(createResponse(serviceResponse?.message, serviceResponse?.content));
     } catch (error: any) {
         console.error("Error caught:", error.message, "\nStack:", error.stack);
         resp.status(500).json(createResponse(error, null));

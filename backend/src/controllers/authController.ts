@@ -44,13 +44,16 @@ authController.post("/auth/login", async(req: Request, resp: Response) => {
 })
 
 
-authController.post("/auth/logout", async(req: Request, resp: Response): Promise<void> => {
+authController.get("/auth/logout", async(req: Request, resp: Response): Promise<void> => {
     try {
-        resp.clearCookie("token");
-        resp.status(302).json(createResponse("Logout successful!", null)).redirect("/auth");
+        resp.clearCookie("token", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict'
+        });
+        resp.status(200).json(createResponse("Logout successful!", null));
     } catch (error: any) {
-        console.error(error);
-        resp.status(500).json(createResponse(error, null));
+        resp.status(500).json(createResponse("Logout failed", null));
     }
 })
 

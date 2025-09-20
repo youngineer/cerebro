@@ -25,3 +25,17 @@ export interface IAuthServices {
     login(payload: ILoginRequest): Promise<IBackendResponse>;
     logout(): Promise<string>;
 }
+
+
+export interface IResearchListDTO {
+    id: string;
+    status: string;
+    topic: string;
+    createdAt: Date
+}
+
+
+export interface IResearchServices {
+    getResearchList(): Promise<IBackendResponse>;
+    getResearch(researchId: string): Promise<IBackendResponse>;
+}

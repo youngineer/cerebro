@@ -45,7 +45,7 @@ const AuthPage: FC = (): JSX.Element => {
     try {
       const response = await (isLogin ? authServices.login(loginPayload) : authServices.signup(signupPayload));
       setAlert({ isError: false, message: String(response) });
-      navigate("/url/");
+      navigate("/research");
     } catch (error: any) {
       console.error(error);
       setAlert({ isError: true, message: String(error ?? 'An error occurred') });
@@ -58,7 +58,7 @@ const AuthPage: FC = (): JSX.Element => {
   return (
     <div>
       {alert && <AlertDialog {...alert} />}
-  <form onSubmit={handleFormSubmit}>
+    <form onSubmit={handleFormSubmit}>
       <fieldset className="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
         <legend className="fieldset-legend text-xl">{isLogin? "Login": "Signup"}</legend>
 
@@ -152,14 +152,17 @@ const AuthPage: FC = (): JSX.Element => {
           )
         }
 
-  <h5 className='flex justify-center cursor-pointer' onClick={(): void => setIsLogin((prev) => !prev)}>{isLogin? "Not registered? Signup": "Already registered? Login"}</h5>
+        <h5 className='flex justify-center cursor-pointer' onClick={(): void => setIsLogin((prev) => !prev)}>{isLogin? "Not registered? Signup": "Already registered? Login"}</h5>
 
-  <button type="submit" className="btn btn-neutral mt-4">{isLogin? "Login": "Signup"}</button>
+        <button type="submit" className="btn btn-neutral mt-4">{isLogin? "Login": "Signup"}</button>
 
-  {loading && <p className="mt-2">Loading...</p>}
   
       </fieldset>
     </form>
+    
+    {loading && (<div className='backdrop-blur-sm'>
+      <span className="loading loading-spinner loading-xl"></span>
+    </div>)}
   </div>
   )
 }

@@ -11,7 +11,6 @@ const Navbar = () => {
 
     const logout = async(e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
-
         try {
             const response: string = await authServices.logout();
             if(!response) throw new Error("Logout unsuccessful!")
@@ -26,7 +25,6 @@ const Navbar = () => {
     useEffect(() => {
         const url: string = window.location.pathname;
         const page: string = url.slice(url.lastIndexOf('/'), url.length);
-        console.log(page)
         setIsAuthPage(page === '/auth');
     }, [navigate]);
 
