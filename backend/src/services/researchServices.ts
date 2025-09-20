@@ -4,6 +4,7 @@ import { getEnvVar } from "../utils/helperFunctions.ts";
 import { AI_PROMPT, NEWSAPI_URL } from "../utils/constants.ts";
 import puppeteer from 'puppeteer';
 import researchProcessingQueue from '../configs/queue.ts';
+import type { tryCatch } from 'bullmq';
 
 const prisma = new PrismaClient();
 
@@ -255,6 +256,45 @@ export class ResearchServices implements IResearchServices {
             return { 
                 success: false, 
                 message: error.message || "Error fetching research", 
+                content: null 
+            };
+        }
+    }
+
+    async getUserTopics(userId: string): Promise<IServiceResponse> {
+        try {
+            const topics = await prisma.researchTopic.findMany({
+                where: {
+                    userId: userId
+                },
+                orderBy: {
+                    createdAt: 'desc'
+                },
+                select: {
+                    id: true,
+                    topic: true,
+                    status: true,
+                    createdAt: true,
+                }
+            });
+
+            if (!topics || topics.length < 1) {
+                return {
+                    success: false,
+                    message: "No topics added yet",
+                    content: null
+                }
+            }
+
+            return {
+                success: true,
+                message: "Topics fetched successfully!",
+                content: topics
+            }
+        } catch (error: any) {
+            return { 
+                success: false, 
+                message: error.message || "Error fetching topics", 
                 content: null 
             };
         }

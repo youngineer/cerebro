@@ -38,6 +38,7 @@ export interface IResearchServices {
     postResearch(userId: string, payload: string[]): Promise<IServiceResponse>;
     getTopics(): Promise<IServiceResponse>;
     getResearch(researchId?: string | null): Promise<IServiceResponse>;
+    getUserTopics(userId: string): Promise<IServiceResponse>;
 }
 
 
