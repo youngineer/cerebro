@@ -1,4 +1,3 @@
-import { data } from "react-router-dom";
 import type { IBackendResponse, IResearchServices } from "../types/interfaces";
 import { BACKEND_URL } from "../utils/constants";
 
@@ -16,10 +15,8 @@ class ResearchService implements IResearchServices {
             const data: IBackendResponse = await response.json();
 
             if(!response.ok) throw new Error(data?.message || "Error fetching research list");
-            console.log(data)
             return data;
         } catch (error: any) {
-            console.error(error);
             return {
                 message: error,
                 content: null
@@ -29,6 +26,7 @@ class ResearchService implements IResearchServices {
 
     async getResearch(researchId: string): Promise<IBackendResponse> {
         const url: string = BACKEND_URL + `/research/${researchId}`;
+        console.log(url)
         const request: Request = new Request(url, {
             method: 'GET',
             credentials: 'include'
@@ -41,7 +39,6 @@ class ResearchService implements IResearchServices {
 
             return data;
         } catch (error: any) {
-            console.error(error);
             return {
                 message: error,
                 content: null

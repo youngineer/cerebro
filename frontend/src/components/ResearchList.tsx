@@ -33,13 +33,19 @@ const ResearchList: FC  = (): JSX.Element => {
         })();
     }, [])
 
+    if (loading)
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <span className="loading loading-spinner"></span>
+      </div>
+    );
+
     if(!researchList) return <div>Nothing to display</div>
   return (
     <div>
         {alert && <AlertDialog {...alert} />}
         <div className="overflow-x-auto min-w-3xl cursor-pointer">
             <table className="table">
-                {/* head */}
                 <thead>
                 <tr>
                     <th></th>
@@ -62,7 +68,6 @@ const ResearchList: FC  = (): JSX.Element => {
                 </tbody>
             </table>
             </div>
-        {loading && <span className="loading loading-spinner loading-xl"></span>}
     </div>
   )
 }

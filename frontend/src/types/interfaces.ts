@@ -39,3 +39,45 @@ export interface IResearchServices {
     getResearchList(): Promise<IBackendResponse>;
     getResearch(researchId: string): Promise<IBackendResponse>;
 }
+
+export interface ResearchTopic {
+    id: string;
+    userId: string;
+    topic: string;
+    status: string;
+    createdAt: string;
+    logs: ILog[];
+    result: IResult;
+    user: IUser;
+}
+
+export interface ILog {
+    id: string;
+    step: string;
+    message: string;
+    createdAt: string;
+    researchTopicId: string;
+}
+
+export interface IResult {
+    id: string;
+    summaries: string | ISummary[];
+    keywords: string[];
+    createdAt: string;
+    researchTopicId: string;
+}
+
+export interface ISummary {
+    title: string;
+    summary: string;
+}
+
+export interface IUser {
+    id: string;
+    name: string;
+}
+
+export interface IResearchResponse {
+    message: string;
+    content: ResearchTopic;
+}

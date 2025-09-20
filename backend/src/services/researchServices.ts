@@ -227,9 +227,16 @@ export class ResearchServices implements IResearchServices {
                     logs: {
                         orderBy: { createdAt: 'asc' }
                     },
-                    result: true
+                    result: true,
+                    user: {
+                        select: {
+                            id: true,
+                            name: true
+                        }
+                    }
                 }
             });
+
 
             if (!research) {
                 return {
