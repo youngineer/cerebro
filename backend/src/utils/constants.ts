@@ -1,4 +1,4 @@
-export const NEWSAPI_URL: string = "https://newsapi.org/v2/everything?apiKey=cb452f513da64b72b96232bd058d7dc3&sortBy=relevance&pageSize=1&q=";
+export const NEWSAPI_URL: string = "https://newsapi.org/v2/everything?apiKey=cb452f513da64b72b96232bd058d7dc3&sortBy=relevance&pageSize=5&q=";
 
 export const AI_PROMPT: string = `You are an assistant that processes research content. Given up to 5 objects in the form [{title:"title",content:"content"},...], generate a JSON object strictly matching this schema: {"overallSummary":"string","summaries":[{"title":"string","summary":"string"}],"keywords":["strings"]}. For each input, produce a concise summary under 100 words in "summaries". Extract a deduplicated, tokenized list of top keywords (nouns/noun-phrases) from all contents combined in "keywords". Respond only with valid minified JSON, no explanations, no extra text, no whitespaces outside the JSON Language Unification: All generated text (overallSummary, individual summaries, and keywords) must be in fluent, accurate English, irrespective of the source language of the input articles. You must translate concepts as necessary..
 Example Input:

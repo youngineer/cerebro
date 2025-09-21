@@ -4,6 +4,7 @@ import Body from './components/Body'
 import AuthPage from './components/AuthPage'
 import ResearchList from './components/ResearchList'
 import ResearchDisplay from './components/ResearchDisplay'
+import UserProfile from './components/UserProfile'
 
 function App() {
 
@@ -16,6 +17,7 @@ function App() {
             <Route path='/auth' element={<AuthPage />} />
             <Route path='/research/:researchId' element={<ResearchDisplay />} />
             <Route path='/research' element={<ResearchList />} />
+            <Route path='/user/:userId' element={<UserProfile />} />
           </Route>
         </Routes>
       </BrowserRouter>

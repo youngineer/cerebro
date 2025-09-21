@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react';
 import {
-  type ResearchTopic,
+  type IResearchTopic,
   type IBackendResponse,
   type ISummary,
   type ILog,
 } from '../types/interfaces';
 import researchServices from '../services/researchServices';
 import AlertDialog from './AlertDialog';
+import { useNavigate } from 'react-router-dom';
 
 const ResearchDisplay = () => {
-  const [data, setData] = useState<ResearchTopic | null>(null);
+  const navigate = useNavigate();
+  const [data, setData] = useState<IResearchTopic | null>(null);
   const [loading, setLoading] = useState(false);
   const [alert, setAlert] = useState<{
     isError: boolean;
@@ -19,12 +21,13 @@ const ResearchDisplay = () => {
   useEffect(() => {
     const id = window.location.pathname.split("/").pop()!;
     setLoading(true);
+
     researchServices
-        .getResearch(id)
-        .then((res: IBackendResponse) => setData(res.content))
-        .catch((e) => setAlert({ isError: true, message: String(e) }))
-        .finally(() => setLoading(false));
-    }, []);
+      .getResearch(id)
+      .then((res: IBackendResponse) => setData(res.content))
+      .catch((e) => setAlert({ isError: true, message: String(e) }))
+      .finally(() => setLoading(false));
+  }, []);
 
   if (loading)
     return (
@@ -48,7 +51,14 @@ const ResearchDisplay = () => {
 
   return (
     <div className="max-w-5xl mx-auto p-4 space-y-4">
+        
       {alert && <AlertDialog {...alert} />}
+      <div className="tooltip" data-tip={`Click to view ${user?.name}'s topics`}>
+        <span>Created by: </span>
+        <button className="btn btn-ghost btn-info min-w-auto" onClick={() => navigate(`/user/${data?.userId}`)}>
+          {user?.name}
+        </button>
+      </div>
       <div className="card shadow">
         <div className="card-body">
           <div className="flex justify-between items-center">
@@ -84,7 +94,7 @@ const ResearchDisplay = () => {
             ) : (
               <p className="">No summary available</p>
             )}
-            
+
           </div>
         </div>
       )}

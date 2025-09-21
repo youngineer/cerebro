@@ -41,7 +41,8 @@ const Navbar = () => {
                 {
                     !isAuthPage && (
                         <div className="flex-none">
-                            <button className="btn btn-ghost p-2 text-lg" onClick={logout}>logout</button>
+                            <button className="btn btn-ghost btn-success mx-16 p-2 text-lg" onClick={() => navigate("/research")}>All topics</button>
+                            <button className="btn btn-ghost btn-error p-2 text-lg" onClick={logout}>logout</button>
                         </div>
                     )
                 }

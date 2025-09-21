@@ -38,9 +38,11 @@ export interface IResearchListDTO {
 export interface IResearchServices {
     getResearchList(): Promise<IBackendResponse>;
     getResearch(researchId: string): Promise<IBackendResponse>;
+    getUserResearchList(id: string): Promise<IBackendResponse>;
+    postResearch(query: string): Promise<IBackendResponse>;
 }
 
-export interface ResearchTopic {
+export interface IResearchTopic {
     id: string;
     userId: string;
     topic: string;
@@ -79,5 +81,5 @@ export interface IUser {
 
 export interface IResearchResponse {
     message: string;
-    content: ResearchTopic;
+    content: IResearchTopic;
 }

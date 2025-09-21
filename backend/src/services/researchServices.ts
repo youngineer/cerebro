@@ -11,8 +11,8 @@ const prisma = new PrismaClient();
 
 export class ResearchServices implements IResearchServices {
 
-    async postResearch(userId: string, payload: string[]): Promise<IServiceResponse> {
-        if(payload.length < 1 || payload.every(content => content.trim() === "")) {
+    async postResearch(userId: string, payload: string): Promise<IServiceResponse> {
+        if(payload.trim() === "") {
             return {
                 success: false,
                 message: "Empty query received",
@@ -29,7 +29,7 @@ export class ResearchServices implements IResearchServices {
         try {
             const researchTopic = await prisma.researchTopic.create({
                 data: {
-                    topic: topic,
+                    topic: payload,
                     userId: userId
                 }
             });
@@ -43,7 +43,7 @@ export class ResearchServices implements IResearchServices {
             });
 
             // Queue the background job
-            const job = await researchProcessingQueue.add(topic, {
+            const job = await researchProcessingQueue.add(payload, {
                 researchTopicId: researchTopic.id,
                 payload,
                 userId
@@ -68,7 +68,7 @@ export class ResearchServices implements IResearchServices {
             
     }
 
-    async executeResearch(researchTopicId: string, payload: string[], userId: string): Promise<IServiceResponse> {
+    async executeResearch(researchTopicId: string, payload: string, userId: string): Promise<IServiceResponse> {
         try {
             const articleObj: Partial<IArticle>[] = await this.getNewsContent(payload);
             await prisma.workflowLog.create({
@@ -104,9 +104,7 @@ export class ResearchServices implements IResearchServices {
                     message: `Full articles have been successfully fetched for the query.`
                 }
             });
-
             const aiResponse: string = await this.getAiResponse(payload, fullContent);
-
             let aiResponseJson;
             try {
                 aiResponseJson = JSON.parse(aiResponse);
@@ -300,10 +298,14 @@ export class ResearchServices implements IResearchServices {
         }
     }
 
-    private async getNewsContent(query: string[]): Promise<Partial<IArticle>[]> {
+    private async getNewsContent(query: string): Promise<Partial<IArticle>[]> {
         let keywords: string = query[0]!;
         for (let i = 1; i < query.length; ++i) {
-            keywords += "%" + query[i];
+            if(query[i] === " ") {
+                keywords += "%";
+            } else {
+                keywords += query[i];
+            }
         }
 
         try {
@@ -321,7 +323,6 @@ export class ResearchServices implements IResearchServices {
             if (!response.ok) throw new Error("Error fetching data from NewsAPI");
 
             const data = await response.json() as IApiResponse;
-
             if (data && Array.isArray(data.articles)) {
                 
                 const articleObj: Partial<IArticle>[] = await Promise.allSettled(
@@ -430,14 +431,10 @@ export class ResearchServices implements IResearchServices {
         }
     }
 
-    private async getAiResponse(query: string[], content: string[]): Promise<string> {
+    private async getAiResponse(query: string, content: string[]): Promise<string> {
         try {
-            let targetTopic: string = query[0]!;
-            for(let i = 1; i < query.length; ++i) {
-                targetTopic += " " + query[i];
-            }
 
-            const prompt: string = AI_PROMPT + `Research topic: ${targetTopic}
+            const prompt: string = AI_PROMPT + `Research topic: ${query}
             content: ${content}`;
             
             const apiKey = getEnvVar("OPENROUTER_APIKEY");

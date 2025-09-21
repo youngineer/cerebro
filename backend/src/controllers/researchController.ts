@@ -12,7 +12,7 @@ const researchController: Router = express.Router();
 
 researchController.post("/research", auth, async(req: Request, resp: Response): Promise<void>  => {
     try {
-        const {query} = req?.body;
+        const query = req?.body.query;
         const userID = req?.user?.id;
         const serviceResponse: IServiceResponse = await researchServices.postResearch(userID, query);
 
@@ -49,9 +49,8 @@ researchController.get("/research/:researchId", auth, async(req: Request, resp: 
 });
 
 
-researchController.get("/user", auth, async(req: Request, resp: Response) => {
-    const userId: string = req?.body?.userId  || req?.user?.id;
-    console.log(userId)
+researchController.get("/user/:userId", auth, async(req: Request, resp: Response) => {
+    const userId: string = req?.params.userId!;
     try {
         const serviceResponse: IServiceResponse = await researchServices.getUserTopics(userId);
 

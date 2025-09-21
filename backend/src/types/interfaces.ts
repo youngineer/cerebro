@@ -34,8 +34,8 @@ export interface IJob {
 
 
 export interface IResearchServices {
-    executeResearch(researchTopicId: string, payload: string[], userId: string): Promise<any>;
-    postResearch(userId: string, payload: string[]): Promise<IServiceResponse>;
+    executeResearch(researchTopicId: string, payload: string, userId: string): Promise<any>;
+    postResearch(userId: string, payload: string): Promise<IServiceResponse>;
     getTopics(): Promise<IServiceResponse>;
     getResearch(researchId?: string | null): Promise<IServiceResponse>;
     getUserTopics(userId: string): Promise<IServiceResponse>;

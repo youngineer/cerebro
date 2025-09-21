@@ -1,11 +1,11 @@
-import { useEffect, useState, type FC, type JSX } from 'react'
-import type { IResearchListDTO, IBackendResponse, IAlertInfo } from '../types/interfaces'
+import { useEffect, useState } from 'react'
 import researchServices from '../services/researchServices';
+import type { IAlertInfo, IBackendResponse, IResearchListDTO } from '../types/interfaces';
 import AlertDialog from './AlertDialog';
 import { useNavigate } from 'react-router-dom';
 
-const ResearchList: FC  = (): JSX.Element => {
-    const navigate = useNavigate();
+const UserProfile = () => {
+  const navigate = useNavigate();
     const [researchList, setResearchList] = useState<IResearchListDTO[] | null>(null);
     const [alert, setAlert] = useState<IAlertInfo | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
@@ -14,9 +14,11 @@ const ResearchList: FC  = (): JSX.Element => {
     useEffect(() => {
         setLoading(true);
         setAlert(null);
+
+        const id = window.location.pathname.split("/").pop()!;
         (async function getResearchList(): Promise<void> {
             try {
-                const response: IBackendResponse = await researchServices.getResearchList();
+                const response: IBackendResponse = await researchServices.getUserResearchList(id);
                 setAlert({ isError: false, message: response?.message });
                 setResearchList(response?.content);
             } catch (error: any) {
@@ -39,7 +41,6 @@ const ResearchList: FC  = (): JSX.Element => {
     if(!researchList) return <div>Nothing to display</div>
   return (
     <div>
-        <h1>All Topics</h1>
         {alert && <AlertDialog {...alert} />}
         <div className="overflow-x-auto min-w-3xl cursor-pointer">
             <table className="table">
@@ -52,7 +53,7 @@ const ResearchList: FC  = (): JSX.Element => {
                 </thead>
                 <tbody>
                     {
-                        researchList.map((research, ) => {
+                        researchList.map((research: IResearchListDTO) => {
                             return (
                                 <tr className="hover:bg-base-300" id={research?.id} onClick={() => navigate(`/research/${research?.id}`)}>
                                     <th>{slNo++}</th>
@@ -69,4 +70,4 @@ const ResearchList: FC  = (): JSX.Element => {
   )
 }
 
-export default ResearchList
+export default UserProfile
